@@ -1,4 +1,4 @@
-const clothingItem = require("../models/clothingItem");
+const clothingItemModel = require("../models/clothingItem");
 const {
   BAD_REQUEST,
   NOT_FOUND,
@@ -6,13 +6,13 @@ const {
 } = require("../utils/errors");
 
 module.exports.getItems = (req, res) => {
-  clothingItem
+  clothingItemModel
     .find({})
     .then((clothingItem) => res.send({ data: clothingItem }))
     .catch((err) => {
       console.error(err);
 
-      res
+      return res
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });
     });
@@ -21,7 +21,7 @@ module.exports.getItems = (req, res) => {
 module.exports.postItems = (req, res) => {
   const { name, weather, imageUrl } = req.body;
 
-  clothingItem
+  clothingItemModel
     .create({ name, weather, imageUrl, owner: req.user._id })
     .then((clothingItem) => res.send({ data: clothingItem }))
     .catch((err) => {
@@ -34,14 +34,14 @@ module.exports.postItems = (req, res) => {
           .status(BAD_REQUEST)
           .send({ message: "Invalid data passed to methods" });
       }
-      res
+      return res
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });
     });
 };
 
 module.exports.deleteItems = (req, res) => {
-  clothingItem
+  clothingItemModel
     .findByIdAndDelete(req.params.itemId)
     .orFail()
     .then((clothingItem) => res.send({ data: clothingItem }))
@@ -53,14 +53,14 @@ module.exports.deleteItems = (req, res) => {
       if (err.name === "DocumentNotFoundError") {
         return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
-      res
+      return res
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });
     });
 };
 
 module.exports.likeItem = (req, res) => {
-  clothingItem
+  clothingItemModel
     .findByIdAndUpdate(
       req.params.itemId,
       { $addToSet: { likes: req.user._id } },
@@ -76,14 +76,14 @@ module.exports.likeItem = (req, res) => {
       if (err.name === "DocumentNotFoundError") {
         return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
-      res
+      return res
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });
     });
 };
 
 module.exports.unlikeItem = (req, res) => {
-  clothingItem
+  clothingItemModel
     .findByIdAndUpdate(
       req.params.itemId,
       { $pull: { likes: req.user._id } },
@@ -99,7 +99,7 @@ module.exports.unlikeItem = (req, res) => {
       if (err.name === "DocumentNotFoundError") {
         return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
-      res
+      return res
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });
     });

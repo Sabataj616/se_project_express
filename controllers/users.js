@@ -17,7 +17,7 @@ module.exports.getUser = (req, res) => {
       if (err.name === "DocumentNotFoundError") {
         return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
-      res
+      return res
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });
     });
@@ -29,7 +29,7 @@ module.exports.getUsers = (req, res) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       console.error(err);
-      res
+      return res
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });
     });
@@ -47,7 +47,7 @@ module.exports.createUser = (req, res) => {
           .status(BAD_REQUEST)
           .send({ message: "Invalid data passed to methods" });
       }
-      res
+      return res
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });
     });
