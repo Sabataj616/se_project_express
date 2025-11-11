@@ -4,6 +4,7 @@ const {
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
 } = require("../utils/errors");
+const auth = require("../middlewares/auth");
 
 module.exports.getItems = (req, res) => {
   clothingItemModel
@@ -42,9 +43,32 @@ module.exports.postItems = (req, res) => {
 
 module.exports.deleteItems = (req, res) => {
   clothingItemModel
-    .findByIdAndDelete(req.params.itemId)
+    .findById(req.params.itemId)
     .orFail()
-    .then((clothingItem) => res.send({ data: clothingItem }))
+    .then((clothingItem) => {
+      
+      if (clothingItem.owner === req.user._id) {
+        clothingItemModel
+          .findByIdAndDelete(req.params.itemId)
+          .orFail()
+          .then((clothingItem) => res.send({ data: clothingItem }))
+          .catch((err) => {
+            console.error(err);
+            if (err.name === "CastError") {
+              return res
+                .status(BAD_REQUEST)
+                .send({ message: "Invalid Item ID" });
+            }
+            if (err.name === "DocumentNotFoundError") {
+              return res.status(NOT_FOUND).send({ message: "Item not found" });
+            }
+            return res
+              .status(INTERNAL_SERVER_ERROR)
+              .send({ message: "An error has occurred on the server" });
+          });
+      }
+      return res.status(403).send({ message: "You dont have authorization" });
+    })
     .catch((err) => {
       console.error(err);
       if (err.name === "CastError") {
