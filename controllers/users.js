@@ -1,13 +1,14 @@
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../utils/config");
 const User = require("../models/user");
 const {
   BAD_REQUEST,
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
 } = require("../utils/errors");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = require("../utils/config");
-const auth = require("../middlewares/auth");
+
+
 
 module.exports.getCurrentUser = (req, res) => {
   User.findById(req.user._id)

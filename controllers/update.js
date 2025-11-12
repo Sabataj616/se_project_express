@@ -3,10 +3,10 @@ const { BAD_REQUEST, INTERNAL_SERVER_ERROR } = require("../utils/errors");
 
 module.exports.updateUser = (req, res) => {
   const { name, avatar } = req.body;
-  console.log({user: req.user});
+  console.log({ user: req.user });
   User.findByIdAndUpdate(
     req.user._id,
-    { name: name, avatar: avatar },
+    { name, avatar },
 
     {
       new: true,

@@ -4,7 +4,6 @@ const {
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
 } = require("../utils/errors");
-const auth = require("../middlewares/auth");
 
 module.exports.getItems = (req, res) => {
   clothingItemModel
@@ -51,12 +50,11 @@ module.exports.deleteItems = (req, res) => {
       throw error;
     })
     .then((clothingItem) => {
-      console.log("Check");
       if (clothingItem.owner.toString() === req.user._id.toString()) {
         return clothingItemModel
           .deleteOne({ _id: req.params.itemId })
 
-          .then((clothingItem) => res.send({ data: clothingItem }))
+          .then((clothingInfo) => res.send({ data: clothingInfo }))
           .catch((err) => {
             console.error(err);
             if (err.name === "CastError") {
