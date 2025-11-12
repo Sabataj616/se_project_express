@@ -44,13 +44,18 @@ module.exports.postItems = (req, res) => {
 module.exports.deleteItems = (req, res) => {
   clothingItemModel
     .findById(req.params.itemId)
-    .orFail()
+    .orFail(() => {
+      const error = new Error("Item not found");
+
+      error.statusCode = NOT_FOUND;
+      throw error;
+    })
     .then((clothingItem) => {
-      
-      if (clothingItem.owner === req.user._id) {
-        clothingItemModel
-          .findByIdAndDelete(req.params.itemId)
-          .orFail()
+      console.log("Check");
+      if (clothingItem.owner.toString() === req.user._id.toString()) {
+        return clothingItemModel
+          .deleteOne({ _id: req.params.itemId })
+
           .then((clothingItem) => res.send({ data: clothingItem }))
           .catch((err) => {
             console.error(err);
@@ -74,9 +79,10 @@ module.exports.deleteItems = (req, res) => {
       if (err.name === "CastError") {
         return res.status(BAD_REQUEST).send({ message: "Invalid Item ID" });
       }
-      if (err.name === "DocumentNotFoundError") {
+      if (err.statusCode === NOT_FOUND) {
         return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
+
       return res
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });
