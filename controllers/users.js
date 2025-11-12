@@ -6,9 +6,9 @@ const {
   BAD_REQUEST,
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
+  EMAIL_EXISTS,
+  UNAUTHORIZED,
 } = require("../utils/errors");
-
-
 
 module.exports.getCurrentUser = (req, res) => {
   User.findById(req.user._id)
@@ -42,6 +42,11 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
+  if (!email || !password) {
+    return res.status(BAD_REQUEST).send({
+      message: "The 'email' and 'password' fields are required",
+    });
+  }
   bcrypt
     .hash(password, 10)
     .then((hash) => User.create({ name, avatar, email, password: hash }))
@@ -53,7 +58,9 @@ module.exports.createUser = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.code === 11000) {
-        return res.status(409).send({ message: "Email already exists" });
+        return res
+          .status(EMAIL_EXISTS)
+          .send({ message: "Email already exists" });
       }
       if (err.name === "ValidationError") {
         return res
@@ -70,7 +77,9 @@ module.exports.createUser = (req, res) => {
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
   if (!email || !email.includes("@") || !password) {
-    return res.status(400).send({ message: "Please enter valid email and password" });
+    return res
+      .status(BAD_REQUEST)
+      .send({ message: "Please enter valid email and password" });
   }
   return User.findUserByCredentials(email, password)
 
@@ -81,6 +90,11 @@ module.exports.login = (req, res) => {
       res.send({ token });
     })
     .catch((err) => {
-      res.status(401).send({ message: err.message });
+      if (err.message === "Incorrect email or password") {
+        return res
+          .status(UNAUTHORIZED)
+          .send({ message: "Incorrect email and password" });
+      }
+      return res.status(INTERNAL_SERVER_ERROR).send({ message: "An error has occured on the server"});
     });
 };

@@ -3,6 +3,7 @@ const {
   BAD_REQUEST,
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
+  FORBIDDEN,
 } = require("../utils/errors");
 
 module.exports.getItems = (req, res) => {
@@ -70,7 +71,7 @@ module.exports.deleteItems = (req, res) => {
               .send({ message: "An error has occurred on the server" });
           });
       }
-      return res.status(403).send({ message: "You dont have authorization" });
+      return res.status(FORBIDDEN).send({ message: "You dont have authorization" });
     })
     .catch((err) => {
       console.error(err);
