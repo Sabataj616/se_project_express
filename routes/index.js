@@ -10,9 +10,10 @@ const auth = require("../middlewares/auth");
 router.use(cors());
 router.post("/signin", login);
 router.post("/signup", createUser);
+router.use("/", clothingItemsRouter);
 router.use(auth);
 router.use("/users", userRouter);
-router.use("/", clothingItemsRouter);
+
 
 router.use((req, res) =>
   res.status(NOT_FOUND).send({ message: "Requested resource not found" })
