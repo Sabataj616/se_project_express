@@ -10,13 +10,9 @@ module.exports.getItems = (req, res) => {
   clothingItemModel
     .find({})
     .then((clothingItem) => res.send({ data: clothingItem }))
-    .catch((err) => {
-      console.error(err);
-
-      return res
+    .catch(() => res
         .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
-    });
+        .send({ message: "An error has occurred on the server" }));
 };
 
 module.exports.postItems = (req, res) => {
@@ -26,7 +22,6 @@ module.exports.postItems = (req, res) => {
     .create({ name, weather, imageUrl, owner: req.user._id })
     .then((clothingItem) => res.send({ data: clothingItem }))
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
         return res.status(BAD_REQUEST).send({ message: "Invalid Item ID" });
       }
@@ -57,7 +52,6 @@ module.exports.deleteItems = (req, res) => {
 
           .then((clothingInfo) => res.send({ data: clothingInfo }))
           .catch((err) => {
-            console.error(err);
             if (err.name === "CastError") {
               return res
                 .status(BAD_REQUEST)
@@ -71,10 +65,11 @@ module.exports.deleteItems = (req, res) => {
               .send({ message: "An error has occurred on the server" });
           });
       }
-      return res.status(FORBIDDEN).send({ message: "You dont have authorization" });
+      return res
+        .status(FORBIDDEN)
+        .send({ message: "You dont have authorization" });
     })
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
         return res.status(BAD_REQUEST).send({ message: "Invalid Item ID" });
       }
@@ -98,7 +93,6 @@ module.exports.likeItem = (req, res) => {
     .orFail()
     .then((clothingItem) => res.send({ data: clothingItem }))
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
         return res.status(BAD_REQUEST).send({ message: "Invalid Item ID" });
       }
@@ -121,7 +115,6 @@ module.exports.unlikeItem = (req, res) => {
     .orFail()
     .then((clothingItem) => res.send({ data: clothingItem }))
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
         return res.status(BAD_REQUEST).send({ message: "Invalid Item ID" });
       }

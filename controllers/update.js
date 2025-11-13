@@ -7,7 +7,7 @@ const {
 
 module.exports.updateUser = (req, res) => {
   const { name, avatar } = req.body;
-  console.log({ user: req.user });
+
   User.findByIdAndUpdate(
     req.user._id,
     { name, avatar },
@@ -21,10 +21,10 @@ module.exports.updateUser = (req, res) => {
       if (!user) {
         return res.status(NOT_FOUND).send({ message: "User not found" });
       }
-      res.send({ data: user });
+      return res.send({ data: user });
     })
     .catch((err) => {
-      console.error(err);
+      
       if (err.name === "CastError") {
         return res.status(BAD_REQUEST).send({ message: "Invalid ID" });
       }

@@ -10,12 +10,11 @@ const {
   UNAUTHORIZED,
 } = require("../utils/errors");
 
-module.exports.getCurrentUser = (req, res) => {
+module.exports.getCurrentUser = (req, res) =>
   User.findById(req.user._id)
     .orFail()
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
         return res.status(BAD_REQUEST).send({ message: "Invalid user ID" });
       }
@@ -26,19 +25,6 @@ module.exports.getCurrentUser = (req, res) => {
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });
     });
-};
-
-module.exports.getUsers = (req, res) => {
-  User.find({})
-
-    .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      console.error(err);
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
-    });
-};
 
 module.exports.createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
@@ -47,16 +33,15 @@ module.exports.createUser = (req, res) => {
       message: "The 'email' and 'password' fields are required",
     });
   }
-  bcrypt
+  return bcrypt
     .hash(password, 10)
     .then((hash) => User.create({ name, avatar, email, password: hash }))
     .then((user) => {
       const userObject = user.toObject();
       delete userObject.password;
-      res.send({ data: userObject });
+      return res.send({ data: userObject });
     })
     .catch((err) => {
-      console.error(err);
       if (err.code === 11000) {
         return res
           .status(EMAIL_EXISTS)
@@ -87,7 +72,7 @@ module.exports.login = (req, res) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
-      res.send({ token });
+      return res.send({ token });
     })
     .catch((err) => {
       if (err.message === "Incorrect email or password") {
@@ -95,6 +80,8 @@ module.exports.login = (req, res) => {
           .status(UNAUTHORIZED)
           .send({ message: "Incorrect email and password" });
       }
-      return res.status(INTERNAL_SERVER_ERROR).send({ message: "An error has occured on the server"});
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occured on the server" });
     });
 };
