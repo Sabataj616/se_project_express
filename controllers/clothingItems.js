@@ -1,21 +1,18 @@
 const clothingItemModel = require("../models/clothingItem");
-const {
-  BAD_REQUEST,
-  NOT_FOUND,
-  INTERNAL_SERVER_ERROR,
-  FORBIDDEN,
-} = require("../utils/errors");
 
-module.exports.getItems = (req, res) => {
+const NotFoundError = require("../errors/not-found-err");
+const BadRequestError = require("../errors/bad-request-err");
+const ForbiddenError = require("../errors/forbidden-err");
+
+module.exports.getItems = (req, res, next) => {
   clothingItemModel
     .find({})
-    .then((clothingItem) => res.send({ data: clothingItem }))
-    .catch(() => res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" }));
+    .then((clothingItem) => {
+      res.send({ data: clothingItem });
+    })
+    .catch(next);
 };
-
-module.exports.postItems = (req, res) => {
+module.exports.postItems = (req, res, next) => {
   const { name, weather, imageUrl } = req.body;
 
   clothingItemModel
@@ -23,67 +20,39 @@ module.exports.postItems = (req, res) => {
     .then((clothingItem) => res.send({ data: clothingItem }))
     .catch((err) => {
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid Item ID" });
+        return next(new BadRequestError("Invalid Item ID"));
+      } else if (err.name === "ValidationError") {
+        return next(new BadRequestError("Invalid data passed to methods"));
+      } else {
+        return next(err);
       }
-      if (err.name === "ValidationError") {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: "Invalid data passed to methods" });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
     });
 };
 
-module.exports.deleteItems = (req, res) => {
+module.exports.deleteItems = (req, res, next) => {
   clothingItemModel
     .findById(req.params.itemId)
     .orFail(() => {
-      const error = new Error("Item not found");
-
-      error.statusCode = NOT_FOUND;
-      throw error;
+      throw new NotFoundError("Item not found");
     })
     .then((clothingItem) => {
       if (clothingItem.owner.toString() === req.user._id.toString()) {
         return clothingItemModel
           .deleteOne({ _id: req.params.itemId })
-
-          .then((clothingInfo) => res.send({ data: clothingInfo }))
-          .catch((err) => {
-            if (err.name === "CastError") {
-              return res
-                .status(BAD_REQUEST)
-                .send({ message: "Invalid Item ID" });
-            }
-            if (err.name === "DocumentNotFoundError") {
-              return res.status(NOT_FOUND).send({ message: "Item not found" });
-            }
-            return res
-              .status(INTERNAL_SERVER_ERROR)
-              .send({ message: "An error has occurred on the server" });
-          });
+          .then((clothingInfo) => res.send({ data: clothingInfo }));
       }
-      return res
-        .status(FORBIDDEN)
-        .send({ message: "You dont have authorization" });
+      throw new ForbiddenError("You do not have authorization");
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid Item ID" });
+        return next(new BadRequestError("Invalid Item ID"));
+      } else {
+        return next(err);
       }
-      if (err.statusCode === NOT_FOUND) {
-        return res.status(NOT_FOUND).send({ message: "Item not found" });
-      }
-
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
     });
 };
 
-module.exports.likeItem = (req, res) => {
+module.exports.likeItem = (req, res, next) => {
   clothingItemModel
     .findByIdAndUpdate(
       req.params.itemId,
@@ -94,18 +63,15 @@ module.exports.likeItem = (req, res) => {
     .then((clothingItem) => res.send({ data: clothingItem }))
     .catch((err) => {
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid Item ID" });
+        return next(new BadRequestError("Invalid Item ID"));
+      } else if (err.name === "DocumentNotFoundError") {
+        return next(new NotFoundError("Item not found"));
       }
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: "Item not found" });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
+      return next(err);
     });
 };
 
-module.exports.unlikeItem = (req, res) => {
+module.exports.unlikeItem = (req, res, next) => {
   clothingItemModel
     .findByIdAndUpdate(
       req.params.itemId,
@@ -116,13 +82,11 @@ module.exports.unlikeItem = (req, res) => {
     .then((clothingItem) => res.send({ data: clothingItem }))
     .catch((err) => {
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid Item ID" });
+        return next(new BadRequestError("Invalid Item ID"));
       }
       if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: "Item not found" });
+        return next(new NotFoundError("Item not found"));
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
+      return next(err);
     });
 };

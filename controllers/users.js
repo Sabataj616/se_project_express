@@ -2,37 +2,29 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../utils/config");
 const User = require("../models/user");
-const {
-  BAD_REQUEST,
-  NOT_FOUND,
-  INTERNAL_SERVER_ERROR,
-  EMAIL_EXISTS,
-  UNAUTHORIZED,
-} = require("../utils/errors");
 
-module.exports.getCurrentUser = (req, res) =>
+const NotFoundError = require("../errors/not-found-err");
+const BadRequestError = require("../errors/bad-request-err");
+const UnauthorizedError = require("../errors/unauthorized-err");
+const EmailExistsError = require("../errors/email-exists-err");
+
+module.exports.getCurrentUser = (req, res, next) =>
   User.findById(req.user._id)
     .orFail()
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid user ID" });
+        return next(new BadRequestError("Invalid User ID"));
       }
       if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: "User not found" });
+        return next(new NotFoundError("User not found"));
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
+      return next(err);
     });
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const { name, avatar, email, password } = req.body;
-  if (!email || !password) {
-    return res.status(BAD_REQUEST).send({
-      message: "The 'email' and 'password' fields are required",
-    });
-  }
+
   return bcrypt
     .hash(password, 10)
     .then((hash) => User.create({ name, avatar, email, password: hash }))
@@ -43,29 +35,19 @@ module.exports.createUser = (req, res) => {
     })
     .catch((err) => {
       if (err.code === 11000) {
-        return res
-          .status(EMAIL_EXISTS)
-          .send({ message: "Email already exists" });
+        return next(new EmailExistsError("this email already exists"));
       }
       if (err.name === "ValidationError") {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: "Invalid data passed to methods" });
+        return next(new BadRequestError("Invalid User ID"));
       }
 
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
+      return next(err);
     });
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
-  if (!email || !email.includes("@") || !password) {
-    return res
-      .status(BAD_REQUEST)
-      .send({ message: "Please enter valid email and password" });
-  }
+
   return User.findUserByCredentials(email, password)
 
     .then((user) => {
@@ -76,12 +58,8 @@ module.exports.login = (req, res) => {
     })
     .catch((err) => {
       if (err.message === "Incorrect email or password") {
-        return res
-          .status(UNAUTHORIZED)
-          .send({ message: "Incorrect email and password" });
+        return next(new UnauthorizedError("Incorrect email or password"));
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occured on the server" });
+      return next(err);
     });
 };

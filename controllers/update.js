@@ -1,11 +1,9 @@
 const User = require("../models/user");
-const {
-  BAD_REQUEST,
-  INTERNAL_SERVER_ERROR,
-  NOT_FOUND,
-} = require("../utils/errors");
 
-module.exports.updateUser = (req, res) => {
+const NotFoundError = require("../errors/not-found-err");
+const BadRequestError = require("../errors/bad-request-err");
+
+module.exports.updateUser = (req, res, next) => {
   const { name, avatar } = req.body;
 
   User.findByIdAndUpdate(
@@ -19,23 +17,15 @@ module.exports.updateUser = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return res.status(NOT_FOUND).send({ message: "User not found" });
+        throw new NotFoundError("User not found");
       }
       return res.send({ data: user });
     })
     .catch((err) => {
-      
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid ID" });
-      }
-      if (err.name === "ValidationError") {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: "Invalid data passed to methods" });
-      }
-
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
+        return next(new BadRequestError("Invalid User ID"));
+      } else if (err.name === "ValidationError") {
+        return next(new BadRequestError("Invalid data passed to methods"));
+      } else return next(err);
     });
 };
