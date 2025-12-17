@@ -11,6 +11,11 @@ const {
 } = require("../middlewares/validation");
 
 router.use(cors());
+router.get('/crash-test', () => {
+  setTimeout(() => {
+    throw new Error('Server will crash now');
+  }, 0);
+});
 router.post("/signin", validateUserSignInBody, login);
 router.post("/signup", validateUserSignUpBody, createUser);
 router.use("/", clothingItemsRouter);
