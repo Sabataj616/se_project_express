@@ -21,11 +21,11 @@ module.exports.postItems = (req, res, next) => {
     .catch((err) => {
       if (err.name === "CastError") {
         return next(new BadRequestError("Invalid Item ID"));
-      } else if (err.name === "ValidationError") {
+      } if (err.name === "ValidationError") {
         return next(new BadRequestError("Invalid data passed to methods"));
-      } else {
+      } 
         return next(err);
-      }
+      
     });
 };
 
@@ -46,9 +46,9 @@ module.exports.deleteItems = (req, res, next) => {
     .catch((err) => {
       if (err.name === "CastError") {
         return next(new BadRequestError("Invalid Item ID"));
-      } else {
+      } 
         return next(err);
-      }
+      
     });
 };
 
@@ -64,7 +64,7 @@ module.exports.likeItem = (req, res, next) => {
     .catch((err) => {
       if (err.name === "CastError") {
         return next(new BadRequestError("Invalid Item ID"));
-      } else if (err.name === "DocumentNotFoundError") {
+      } if (err.name === "DocumentNotFoundError") {
         return next(new NotFoundError("Item not found"));
       }
       return next(err);

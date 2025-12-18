@@ -1,11 +1,11 @@
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
-const mainRouter = require("./routes/index");
 const cors = require("cors");
+const { errors } = require("celebrate");
+const mainRouter = require("./routes/index");
 const errorHandler = require("./middlewares/errorHandler");
 const { requestLogger, errorLogger } = require("./middlewares/logger");
-const { errors } = require("celebrate");
 
 const app = express();
 mongoose.connect("mongodb://127.0.0.1:27017/wtwr_db");

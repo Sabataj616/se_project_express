@@ -24,8 +24,8 @@ module.exports.updateUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === "CastError") {
         return next(new BadRequestError("Invalid User ID"));
-      } else if (err.name === "ValidationError") {
+      } if (err.name === "ValidationError") {
         return next(new BadRequestError("Invalid data passed to methods"));
-      } else return next(err);
+      } return next(err);
     });
 };
